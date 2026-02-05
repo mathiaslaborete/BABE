@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BABY EV Valentine?</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #ffbaba, #ff9a9e);
+  }
+  .box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 26px;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 90%;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+    z-index: 2;
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+  }
+  .begging {
+    width: 180px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+  .buttons {
+    position: relative;
+    height: 130px;
+  }
+  button {
+    font-size: 18px;
+    padding: 14px 26px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.25s ease;
+  }
+  #yes {
+    background: #ff4d6d;
+    color: white;
+    z-index: 3;
+    position: relative;
+  }
+  #no {
+    background: #ccc;
+    position: absolute;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .shake {
+    animation: shake 0.3s;
+  }
+  @keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+    100% { transform: translateX(0); }
+  }
+  .yes-screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, #ff4d6d, #ff9a9e);
+    color: white;
+    z-index: 10;
+    text-align: center;
+    font-size: 4rem;
+  }
+  .yes-screen h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+  }
+  .yes-screen .love-emoji {
+    font-size: 6rem;
+    margin-bottom: 20px;
+  }
+  canvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 20;
+  }
+</style>
+</head>
+<body>
+
+<div class="box" id="questionBox">
+  <h1>BABY EV, will you be my Valentine? I dare you to click NO 😏</h1>
+
+  <img class="begging" src="https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif" alt="begging person">
+
+  <div class="buttons">
+    <button id="yes">YES</button>
+    <button id="no">NO</button>
+  </div>
+</div>
+
+<div class="yes-screen" id="yesScreen">
+  <h2>YAYY! I KNEW YOU WOULD SAY YESS!! 🎉💖</h2>
+  <div class="love-emoji">💘</div>
+</div>
+
+<canvas id="fx"></canvas>
+
+<script>
+const noBtn = document.getElementById("no");
+const yesBtn = document.getElementById("yes");
+const box = document.getElementById("questionBox");
+const yesScreen = document.getElementById("yesScreen");
+const canvas = document.getElementById("fx");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let dodgeCount = 0;
+let yesScale = 1;
+
+// NO button logic
+function moveNo() {
+  dodgeCount++;
+
+  // Grow YES
+  yesScale += 0.15;
+  yesBtn.style.transform = `scale(${yesScale})`;
+
+  // Shake YES
+  yesBtn.classList.add('shake');
+  setTimeout(() => yesBtn.classList.remove('shake'), 300);
+
+  // Move NO
+  if(dodgeCount === 1) {
+    noBtn.style.left = Math.min(window.innerWidth - noBtn.offsetWidth - 20, noBtn.offsetLeft + 150) + "px";
+  } else if(dodgeCount === 2) {
+    noBtn.style.left = Math.max(0, noBtn.offsetLeft - 150) + "px";
+  } else if(dodgeCount === 3) {
+    noBtn.style.top = Math.max(0, noBtn.offsetTop - 120) + "px";
+  } else if(dodgeCount >= 4) {
+    noBtn.innerText = "OK FINE 😭";
+    noBtn.style.background = "#ff4d6d";
+    noBtn.style.color = "white";
+    noBtn.onclick = showYes;
+  }
+}
+
+noBtn.addEventListener("mouseover", moveNo);
+noBtn.addEventListener("touchstart", e => { e.preventDefault(); moveNo(); });
+
+yesBtn.onclick = showYes;
+
+// Show YES screen with hearts and confetti
+function showYes() {
+  box.style.display = "none";
+  yesScreen.style.display = "flex";
+  startConfetti();
+  startHearts();
+}
+
+/* CONFETTI */
+let confetti = [];
+function startConfetti() {
+  for(let i=0;i<300;i++){
+    confetti.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      r: Math.random()*6+2,
+      d: Math.random()*5+1,
+      c: `hsl(${Math.random()*360},100%,50%)`
+    });
+  }
+  animateConfetti();
+}
+function animateConfetti(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  confetti.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fillStyle=p.c;
+    ctx.fill();
+    p.y += p.d;
+    if(p.y>canvas.height)p.y=-10;
+  });
+  requestAnimationFrame(animateConfetti);
+}
+
+/* HEARTS */
+let hearts = [];
+function startHearts() {
+  for(let i=0;i<30;i++){
+    hearts.push({
+      x: Math.random()*canvas.width,
+      y: Math.random()*canvas.height,
+      size: Math.random()*20+10,
+      speed: Math.random()*2+1,
+      opacity: Math.random()*0.7+0.3
+    });
+  }
+  animateHearts();
+}
+function animateHearts(){
+  hearts.forEach(h=>{
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(255,0,128,${h.opacity})`;
+    ctx.moveTo(h.x,h.y);
+    ctx.arc(h.x,h.y,h.size,0,Math.PI*2);
+    ctx.fill();
+    h.y -= h.speed;
+    if(h.y< -20) h.y = canvas.height + 20;
+  });
+  requestAnimationFrame(animateHearts);
+}
+</script>
+
+</body>
+</html>
